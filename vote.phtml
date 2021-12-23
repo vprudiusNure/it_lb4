@@ -1,0 +1,94 @@
+<?php
+	$filename = "results.txt";
+	$votesCount = 0;
+	$results = array();
+
+	if (isset($_POST["vote"])) {
+		$value = (int)htmlspecialchars($_POST["answer"]);
+
+		if (is_readable($filename) && is_writable($filename)) {
+			$flag = false;
+			$idx;
+
+			$handle = fopen($filename, 'r+');
+			if ($handle) {
+				while (($line = fgets($handle)) !== false) {
+					if ($flag) {
+						$results[$idx] = (int)$line;
+						$votesCount += $results[$idx];
+						$flag = false;
+					}
+					else {
+						$idx = (int)$line;
+						$flag = true;
+					}
+				}
+				if (!feof($handle)) {
+					echo "Ошибка: fgets() неожиданно потерпел неудачу\n";
+				}
+				fclose($handle);
+			}
+			unset($handle);
+			unset($flag);
+			unset($idx);
+
+			$results[$value]++;
+			$votesCount++;
+
+			$handle = fopen($filename, 'w');
+			if ($handle) {
+				foreach ($results as $idx => $value) {
+					fwrite($handle, $idx . "\n");
+					fwrite($handle, $value . "\n");
+				}
+				unset($idx);
+				unset($value);
+				fclose($handle);
+			}
+			unset($handle);
+		}
+		else {
+			echo "Ошибка доступа к файлу!\n";
+		}
+
+		unset($value);
+	}
+
+	unset($filename);
+?>
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Lab 4 | Vote Results</title>
+	<style>
+		body {
+			font-size: 18px;
+			padding: 20px;
+		}
+		.center {
+			text-align: center;
+		}
+		.bold {
+			font-weight: bold;
+		}
+		progress {
+			margin-right: 10px;
+		}
+	</style>
+</head>
+
+<body>
+	<h1 class="center">Ответ на главный вопрос жизни, вселенной и всего такого</h1>
+	<h2 class="center">Результаты голосования</h2>
+	<?php
+		foreach ($results as $idx => $value) {
+			echo "<p><span class=\"bold\">$idx</span> — <progress max=\"$votesCount\" value=\"$value\"></progress>$value</p>\n";
+		}
+		unset($idx);
+		unset($value);
+		unset($results);
+		unset($votesCount);
+	?>
+</body>
+</html>
